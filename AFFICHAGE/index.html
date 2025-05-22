@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Affiche - Nuit des Jeunes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #3b0764, #ea580c);
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    canvas {
+      border-radius: 1rem;
+      border: 3px solid #e5e7eb;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .button {
+      background: linear-gradient(to right, #9333ea, #ea580c);
+      color: white;
+      font-weight: bold;
+      padding: 12px 30px;
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+
+    .button:disabled {
+      background: #a3a3a3;
+      cursor: not-allowed;
+      filter: grayscale(100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center text-gray-800">
+
+  <div class="w-full max-w-5xl p-6 card text-center">
+    <h1 class="text-4xl font-extrabold mb-2 text-white bg-gradient-to-r from-purple-700 to-orange-500 py-4 rounded-lg shadow-md">
+      🎉 J'y serai ! - Nuit des Jeunes
+    </h1>
+    <p class="text-lg text-gray-700 mb-6">Ajoute ta photo à l'affiche pour confirmer ta présence</p>
+
+    <div class="mb-6">
+      <button class="button mb-4" onclick="document.getElementById('upload').click()">
+        📸 Sélectionner ma photo
+      </button>
+      <input type="file" id="upload" accept="image/*" class="hidden">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-md font-semibold mb-1">Message personnalisé :</label>
+      <input type="text" id="message" value="J'y serai !" class="p-2 rounded-lg border border-gray-300 w-64 text-center">
+    </div>
+
+    <button id="generateBtn" onclick="generate()" class="button mb-6">
+      Générer mon affiche
+    </button>
+
+    <div>
+      <canvas id="canvas" width="1056" height="768" class="mx-auto"></canvas>
+    </div>
+
+    <button id="downloadBtn" onclick="download()" class="button mt-6" disabled>
+      📥 Télécharger l'affiche
+    </button>
+  </div>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const messageInput = document.getElementById('message');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let counter = 1;
+    let baseImage = new Image();
+    let afficheGénérée = false;
+
+    baseImage.src = 'image.jpg'; // ⚠️ Le fichier image.jpg doit exister dans le même dossier
+    baseImage.onload = () => {
+      ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+    };
+    baseImage.onerror = () => {
+      console.error("L'image de fond 'image.jpg' est introuvable.");
+    };
+
+    function generate() {
+      const file = upload.files[0];
+      if (!file) {
+        alert("Veuillez d'abord sélectionner une photo.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const userImg = new Image();
+        userImg.onload = function() {
+          // Redessiner l'image de fond
+          ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+          // Position de l’image (en haut à droite au-dessus de l’heure)
+          const imgSize = 160;
+          const x = 845;
+          const y = 200;
+
+          // Encadrement blanc
+          ctx.fillStyle = "white";
+          ctx.fillRect(x - 5, y - 5, imgSize + 10, imgSize + 10);
+
+          // Image de l'utilisateur
+          ctx.drawImage(userImg, x, y, imgSize, imgSize);
+
+          // Texte personnalisé
+          ctx.font = "bold 26px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "left";
+          ctx.fillText(`#${counter} - ${messageInput.value}`, x, y - 15);
+
+          counter++;
+          afficheGénérée = true;
+          downloadBtn.disabled = false;
+        };
+        userImg.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function download() {
+      if (!afficheGénérée) {
+        alert("Veuillez d'abord générer votre affiche.");
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.download = 'affiche_jysuis.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
